@@ -1,15 +1,18 @@
 # subaru-preglobal-icbm
 
-Real longitudinal control for preglobal Subarus (2015-2019 Forester / Impreza / Legacy /
-Outback / WRX with EyeSight) is a solved problem for exactly zero cars, and hasn't moved in
-years — every official effort stopped at the 2020+ "global" platform, and every community
-attempt at preglobal has died at the same wall: EyeSight won't let go of the bus.
+**ICBM for preglobal Subarus — working, live, and driven on public roads.** On a 2015
+Outback with EyeSight running [sunnypilot](https://github.com/sunnypilot/sunnypilot),
+EyeSight's own ACC setpoint is commanded via steering-wheel button emulation, closing the
+loop on curve-speed and lead-vehicle-closing scenarios without ever replacing EyeSight
+itself.
 
-This is a from-scratch research project chasing that wall from a different angle — riding
-EyeSight's own decisions instead of fighting it — built and documented on a real 2015
-Outback running [sunnypilot](https://github.com/sunnypilot/sunnypilot), with one rule
-enforced the whole way: **verify every real claim against actual telemetry, real source
-code, or a directly-quoted first-hand source before relying on it.**
+The bigger, still-open question this repo investigates in the open: **full longitudinal
+control has never been solved for any preglobal Subaru, by anyone** — every official
+effort stopped at the 2020+ "global" platform, every community attempt has died at the
+same wall, EyeSight won't let go of the bus. This project is chasing that wall too, from a
+different angle, with one rule enforced the whole way: **verify every real claim against
+actual telemetry, real source code, or a directly-quoted first-hand source before relying
+on it.**
 
 **Start here:** [`progress.md`](progress.md) — the full living log. Every phase, every
 open question, every decision, every incident, exactly as it happened, including the ones
