@@ -15,8 +15,9 @@ failures included.
 - **Lead-vehicle closing-speed advisory** — same idea, driven by the vision model's own
   lead-detection data.
 - **Closed-loop ICBM actuation** for both — EyeSight's own setpoint commanded via button
-  emulation, gated behind explicit driver arming and an instant, unconditional brake/gas/
-  steering-torque override latch.
+  emulation, gated behind explicit driver arming and an instant override latch on brake
+  press (gas/steering-torque overrides are disabled in the current live config — brake-only
+  is what's actually tuned and driven).
 
 ## Known issues — this is not a finished product
 
