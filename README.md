@@ -21,23 +21,34 @@ that didn't work.
   alert, live and working.
 - **Lead-vehicle closing-speed advisory** — a second advisory trigger, grounded in real
   telemetry analysis of the vision model's own (previously unused) lead-detection data.
-- **Real longitudinal actuation** — on a platform with no native long-control support, the
-  car's own ACC (EyeSight) is commanded via steering-wheel button emulation: not replacing
-  EyeSight, riding its own setpoint. A closed-loop controller for curve-speed and
+- **ICBM-style closed-loop actuation** — on a platform with no native long-control support,
+  the car's own ACC (EyeSight) is commanded via steering-wheel button emulation: not
+  replacing EyeSight, riding its own setpoint. A closed-loop controller for curve-speed and
   lead-vehicle-closing scenarios, gated behind explicit driver-controlled arming and an
   unconditional, session-long override latch — brake, gas, or steering torque instantly
-  and permanently disables it. Deployed and live-tested on public roads.
+  and permanently disables it. Deployed and live-tested on public roads. **This is real,
+  proven, and working today** — full openpilot-style longitudinal control (replacing
+  EyeSight outright) is not, see below.
 
-## What's currently under investigation — the interesting part
+## What's currently under investigation — and the honest state of it
 
 Every actuation above works through one field of one CAN message: the cruise button. The
 same message also carries a continuous throttle-command field that openpilot already
-transmits, unedited, on every drive — a genuine command channel this project may already
-own, unexplored until now. Source-verified against upstream `opendbc` and sunnypilot's own
-fork, cross-checked against first-hand community testimony recovered from a decade of
-Discord history, and now under passive archive testing before anything gets transmitted.
-See `research/eyesight_throttle_channel.md` and Q14 in `progress.md` for the full case, the
-real obstacle it runs into, and the falsification-first test plan.
+transmits, unedited, on every drive — a possible second command channel this project may
+already own. Source-verified against upstream `opendbc` and sunnypilot's own fork,
+cross-checked against first-hand community testimony recovered from a decade of Discord
+history, then put through a full falsification-first passive archive campaign before
+anything was ever transmitted.
+
+**The result so far is a genuine, reported-as-is inversion of the original premise, not a
+confirmation.** Of the three candidate command fields, the one with the cleanest evidence
+that it's a real, obeyed command (`ES_Brake.Brake_Pressure`) is the one that needs a panda
+safety-firmware change before it could ever be written. The one field writable today with
+zero firmware change (`Cruise_Throttle` — the whole reason this looked cheap) came back
+inconclusive, not confirmed. **Full longitudinal control is not proven and not close to
+being deployed** — this is still archive analysis, not a live result. See
+`research/eyesight_throttle_channel.md`, `research/es_stage0_campaign_synthesis.md`, and
+Q14 in `progress.md` for the full case, including where it currently stands short.
 
 ## Why "ICBM"
 
