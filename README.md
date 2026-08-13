@@ -1,57 +1,72 @@
 # subaru-preglobal-icbm
 
-**ICBM for preglobal Subarus — working, live, and driven on public roads.** On a 2015
-Outback with EyeSight running [sunnypilot](https://github.com/sunnypilot/sunnypilot),
-EyeSight's own ACC setpoint is commanded via steering-wheel button emulation, closing the
-loop on curve-speed and lead-vehicle-closing scenarios without ever replacing EyeSight
-itself.
+**ICBM for preglobal Subarus — real, driven on public roads, and far from finished.** This
+project rides EyeSight's own ACC via steering-wheel button emulation, on a 2015 Outback
+running [sunnypilot](https://github.com/sunnypilot/sunnypilot). It works. It also has real,
+unsolved problems — that's the actual reason this repo is public. See
+[Known issues](#known-issues--this-is-not-a-finished-product) below, and help fix them.
 
-The bigger, still-open question this repo investigates in the open: **full longitudinal
-control has never been solved for any preglobal Subaru, by anyone** — every official
-effort stopped at the 2020+ "global" platform, every community attempt has died at the
-same wall, EyeSight won't let go of the bus. This project is chasing that wall too, from a
-different angle, with one rule enforced the whole way: **verify every real claim against
-actual telemetry, real source code, or a directly-quoted first-hand source before relying
-on it.**
+**Start here:** [`progress.md`](progress.md) — the full log, exactly as it happened,
+failures included.
 
-**Start here:** [`progress.md`](progress.md) — the full living log. Every phase, every
-open question, every decision, every incident, exactly as it happened, including the ones
-that didn't work.
+## What works
 
-## What's actually shipped and live-tested
+- **Curve-speed advisory** — map-based curve detection (MTSC), driver-facing alert.
+- **Lead-vehicle closing-speed advisory** — same idea, driven by the vision model's own
+  lead-detection data.
+- **Closed-loop ICBM actuation** for both — EyeSight's own setpoint commanded via button
+  emulation, gated behind explicit driver arming and an instant, unconditional brake/gas/
+  steering-torque override latch.
 
-- **Curve-speed advisory** — map-based curve detection (MTSC), wired to a driver-facing
-  alert, live and working.
-- **Lead-vehicle closing-speed advisory** — a second advisory trigger, grounded in real
-  telemetry analysis of the vision model's own (previously unused) lead-detection data.
-- **ICBM-style closed-loop actuation** — on a platform with no native long-control support,
-  the car's own ACC (EyeSight) is commanded via steering-wheel button emulation: not
-  replacing EyeSight, riding its own setpoint. A closed-loop controller for curve-speed and
-  lead-vehicle-closing scenarios, gated behind explicit driver-controlled arming and an
-  unconditional, session-long override latch — brake, gas, or steering torque instantly
-  and permanently disables it. Deployed and live-tested on public roads. **This is real,
-  proven, and working today** — full openpilot-style longitudinal control (replacing
-  EyeSight outright) is not, see below.
+## Known issues — this is not a finished product
 
-## What's currently under investigation — and the honest state of it
+- **EyeSight's own braking is slow.** Self-measured on this car: ~1.94 mph/s. One data
+  point from one car, not rigorously validated — worth re-measuring on other cars.
+- **Doesn't coordinate with EyeSight's own lead-lock.** If EyeSight already has the car
+  ahead locked and is slowing on its own, this system can still layer an unnecessary
+  advisory/adjustment on top of it instead of recognizing EyeSight already has it handled.
+- **Doesn't always restore speed once the event clears.** E.g. after a curve, back on a
+  straight — sometimes it just stays at the reduced speed instead of walking back up.
+- **Restore often lands ~1mph under the original set speed** (75 → 70 → 74, not 75) instead
+  of exactly recovering it. Plausibly related to a documented ECU debounce quirk on
+  closely-spaced button presses (`progress.md`, Q10's burst finding), not yet confirmed as
+  the actual cause.
+- **Inconsistent on speed-limit / city / construction-zone adjustments** — auto-adjusts
+  some of the time, not reliably.
+- **Only 1mph "shallow" steps are implemented.** The car supports ±5mph "deep" steps too,
+  but the signal needed to confirm they'd behave safely turned out unreliable in passive
+  testing — needs a dedicated live test before it ships.
+- **The curve advisory can suggest a speed EyeSight physically can't reach** — e.g. 22mph
+  for a tight roundabout, below EyeSight's real ~25mph floor. Actuation is clamped to that
+  floor; the displayed advisory number isn't guaranteed to be.
 
-Every actuation above works through one field of one CAN message: the cruise button. The
-same message also carries a continuous throttle-command field that openpilot already
-transmits, unedited, on every drive — a possible second command channel this project may
-already own. Source-verified against upstream `opendbc` and sunnypilot's own fork,
-cross-checked against first-hand community testimony recovered from a decade of Discord
-history, then put through a full falsification-first passive archive campaign before
-anything was ever transmitted.
+## Known bugs in this project's own code
 
-**The result so far is a genuine, reported-as-is inversion of the original premise, not a
-confirmation.** Of the three candidate command fields, the one with the cleanest evidence
-that it's a real, obeyed command (`ES_Brake.Brake_Pressure`) is the one that needs a panda
-safety-firmware change before it could ever be written. The one field writable today with
-zero firmware change (`Cruise_Throttle` — the whole reason this looked cheap) came back
-inconclusive, not confirmed. **Full longitudinal control is not proven and not close to
-being deployed** — this is still archive analysis, not a live result. See
-`research/eyesight_throttle_channel.md`, `research/es_stage0_campaign_synthesis.md`, and
-Q14 in `progress.md` for the full case, including where it currently stands short.
+- A past UI feature (on-screen status dots) is directly implicated in repeated real "TAKE
+  CONTROL" disengages on a 3-hour highway drive — fully reverted same night. ~90%
+  confidence the code caused it; the exact mechanism was never fully pinned down. Full
+  writeup in `progress.md`.
+- Separately, and less severe: occasional (roughly weekly), brief (2-3 second)
+  self-resolving "TAKE CONTROL" flashes with no actual loss of control — car keeps driving
+  normally throughout. Not yet root-caused; may or may not be related to the above.
+
+## Ideas worth building
+
+- **Deep-step (±5mph) actuation** — faster large corrections. Needs the live magnitude
+  test above before it's safe to wire up.
+- **Follow-distance emulation** — temporarily widen the gap setting to let a car merging
+  onto the highway in, then restore it. A genuinely new idea; whether the follow-distance
+  button is even CAN-commandable on this platform hasn't been researched yet.
+- Have a bug, an idea, or a different preglobal car to test on? Open an issue. That's the
+  whole ask.
+
+## The longer-term question
+
+Full longitudinal control — replacing EyeSight outright, not riding it — has never been
+solved for any preglobal Subaru, in almost a decade of community attempts. This repo is
+investigating that too, but it is explicitly *not* the near-term focus; perfecting ICBM
+comes first. See `research/eyesight_throttle_channel.md` and Q14 in `progress.md` if you
+want the details.
 
 ## Why "ICBM"
 
@@ -62,20 +77,16 @@ close that gap, starting from a single car, done properly.
 
 ## How this got here
 
-Every step — CAN reverse-engineering, UDS diagnostic probing, bus-topology analysis, panda
-safety-firmware research, community archaeology across a decade of the comma.ai Discord —
-followed the same discipline: verify before relying on anything, pre-register what would
-confirm or kill a hypothesis before looking at the result, and revert immediately if a live
-test starts misbehaving rather than debug live in a moving car. That discipline has caught
-real bugs before they became real problems — a `plannerd` crash from a schema mismatch, a
-safety-latch false-positive from engagement timing, an under-sized safety budget — and has
-caught this project's own mistakes just as readily, including two AI-research passes that
-turned out to contain fabricated quotes (excised, documented, never repeated).
+Every step followed the same discipline: verify against real telemetry or source before
+relying on anything, and revert immediately if a live test misbehaves rather than debug
+live in a moving car. That discipline is also what caught this project's own mistakes,
+including two early AI-research passes that turned out to contain fabricated quotes
+(excised, documented, never repeated — see `claude.md`).
 
 See [`research/`](research) for every individual write-up, and
-[`CONTRIBUTING.md`](CONTRIBUTING.md) if you want to help — the single most useful thing
-right now is running the existing passive analysis scripts against a different preglobal
-car's own archived data.
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for how to help — right now, the most useful thing is
+running the existing passive analysis scripts against a different preglobal car's own
+archived data.
 
 ## Safety
 
