@@ -1,48 +1,84 @@
-# Poor-Man's Longitudinal Control
+# subaru-preglobal-icbm
 
-A DIY curve-speed advisory / longitudinal-control research project for a 2015 Subaru
-Outback running [sunnypilot](https://github.com/sunnypilot/sunnypilot) — built and
-documented iteratively, with an emphasis on verifying every real claim against actual
-telemetry, code, or first-hand community reports rather than assumption.
+Real longitudinal control for preglobal Subarus (2015-2019 Forester / Impreza / Legacy /
+Outback / WRX with EyeSight) is a solved problem for exactly zero cars, and hasn't moved in
+years — every official effort stopped at the 2020+ "global" platform, and every community
+attempt at preglobal has died at the same wall: EyeSight won't let go of the bus.
 
-**Start here:** [`progress.md`](progress.md) — the living project doc. Phase status,
-open questions, decisions log, and full incident history.
+This is a from-scratch research project chasing that wall from a different angle — riding
+EyeSight's own decisions instead of fighting it — built and documented on a real 2015
+Outback running [sunnypilot](https://github.com/sunnypilot/sunnypilot), with one rule
+enforced the whole way: **verify every real claim against actual telemetry, real source
+code, or a directly-quoted first-hand source before relying on it.**
 
-## What's actually shipped
+**Start here:** [`progress.md`](progress.md) — the full living log. Every phase, every
+open question, every decision, every incident, exactly as it happened, including the ones
+that didn't work.
 
-- **Phase 1 (curve-speed advisory):** map-based curve detection (MTSC) wired to a
-  driver-facing alert, live and working.
-- **Lead-vehicle closing-speed advisory:** a second advisory trigger, grounded in real
+## What's actually shipped and live-tested
+
+- **Curve-speed advisory** — map-based curve detection (MTSC), wired to a driver-facing
+  alert, live and working.
+- **Lead-vehicle closing-speed advisory** — a second advisory trigger, grounded in real
   telemetry analysis of the vision model's own (previously unused) lead-detection data.
-- **Phase 3 (real longitudinal actuation — live):** on a platform with no native
-  long-control support, the car's own ACC (EyeSight) is commanded via steering-wheel
-  button emulation ("ride EyeSight's own setpoint, turn its dial" rather than replace
-  it) — a closed-loop controller for both curve-speed and lead-vehicle-closing scenarios,
-  gated behind explicit driver-controlled arming and an unconditional, session-long
-  override latch (brake/gas/steering torque instantly and permanently disables it).
-  Deployed and live-tested on public roads. Real magnitude/cadence limits were
-  empirically derived from this car's own archived driving data rather than assumed —
-  see `research/button_cadence_response_curve.md` and
-  `research/phase3_controller_design.md` for the full derivation and safety design.
+- **Real longitudinal actuation** — on a platform with no native long-control support, the
+  car's own ACC (EyeSight) is commanded via steering-wheel button emulation: not replacing
+  EyeSight, riding its own setpoint. A closed-loop controller for curve-speed and
+  lead-vehicle-closing scenarios, gated behind explicit driver-controlled arming and an
+  unconditional, session-long override latch — brake, gas, or steering torque instantly
+  and permanently disables it. Deployed and live-tested on public roads.
+
+## What's currently under investigation — the interesting part
+
+Every actuation above works through one field of one CAN message: the cruise button. The
+same message also carries a continuous throttle-command field that openpilot already
+transmits, unedited, on every drive — a genuine command channel this project may already
+own, unexplored until now. Source-verified against upstream `opendbc` and sunnypilot's own
+fork, cross-checked against first-hand community testimony recovered from a decade of
+Discord history, and now under passive archive testing before anything gets transmitted.
+See `research/eyesight_throttle_channel.md` and Q14 in `progress.md` for the full case, the
+real obstacle it runs into, and the falsification-first test plan.
+
+## Why "ICBM"
+
+Sunnypilot already ships this exact idea — button-spoofed longitudinal control — for other
+car brands, under the name **Intelligent Cruise Button Management**. It's confirmed
+unimplemented for every Subaru platform, preglobal included. This project is an attempt to
+close that gap, starting from a single car, done properly.
 
 ## How this got here
 
-Every step — from the original CAN reverse-engineering through the first live actuation
-test — followed the same discipline: verify against real telemetry, actual code, or a
-directly-quoted first-hand source before relying on anything, and revert immediately if
-a live test starts misbehaving rather than debug live. That discipline caught real bugs
-along the way (a plannerd crash from a schema mismatch, a safety-latch false-positive
-from engagement timing, an under-sized safety budget), each found and fixed *before* it
-became a real problem, not after.
+Every step — CAN reverse-engineering, UDS diagnostic probing, bus-topology analysis, panda
+safety-firmware research, community archaeology across a decade of the comma.ai Discord —
+followed the same discipline: verify before relying on anything, pre-register what would
+confirm or kill a hypothesis before looking at the result, and revert immediately if a live
+test starts misbehaving rather than debug live in a moving car. That discipline has caught
+real bugs before they became real problems — a `plannerd` crash from a schema mismatch, a
+safety-latch false-positive from engagement timing, an under-sized safety budget — and has
+caught this project's own mistakes just as readily, including two AI-research passes that
+turned out to contain fabricated quotes (excised, documented, never repeated).
 
-See [`research/`](research) for the individual write-ups — CAN bus reverse-engineering,
-UDS diagnostic probing, bus-topology analysis, and community research pulled from the
-comma.ai Discord and cross-referenced against sunnypilot's own official implementations
-for other car brands — with every claim checked against a primary source before being
-relied on.
+See [`research/`](research) for every individual write-up, and
+[`CONTRIBUTING.md`](CONTRIBUTING.md) if you want to help — the single most useful thing
+right now is running the existing passive analysis scripts against a different preglobal
+car's own archived data.
+
+## Safety
+
+This repository documents CAN-level changes to how a real vehicle's adaptive cruise
+control behaves. That's safety-adjacent by nature, not a toy project — read
+[`CONTRIBUTING.md`](CONTRIBUTING.md#safety) before proposing or running anything live.
+Real incidents, including ones that faulted the car's own safety systems, are documented
+in `progress.md` exactly as they happened.
 
 ## A note on paths
 
 A couple of the research scripts/docs reference a local route-archive location and
 schema path from this project's own setup — those have been scrubbed before publishing.
 Swap in your own paths if you want to actually run them.
+
+## License
+
+[MIT](LICENSE) — matching the license of `openpilot`, `opendbc`, and `sunnypilot`
+underneath it. Nothing here is a certified or warranted product; see the license's
+additional notice and the Safety section above.
