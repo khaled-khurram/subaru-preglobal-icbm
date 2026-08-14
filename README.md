@@ -21,6 +21,42 @@ failures included.
   *and* steering-torque still independently block sending a simulated button press in the
   exact instant any of them is active, every cycle, regardless of the session latch.
 
+## How it actually works (the short version)
+
+Someone asked this exact question on
+[sunnypilot's own forum](https://community.sunnypilot.ai/t/enabling-icbm-on-17-impreza/191)
+and got a real, honest answer from sunnypilot itself:
+
+> "The necessary button message structure and routing aren't exposed or implemented by
+> Subaru in a way that supports emulation yet... this isn't something we're actively
+> pursuing... would likely need to be a community-driven effort."
+
+That's true of the message everyone assumes is the mechanism — the visible steering-wheel
+button bits on `CruiseControl` (`0x144`). Those really are blocked: not TX-allowed by the
+panda's safety firmware, and even if they were, EyeSight's own copy is already live on that
+bus, so injecting there means fighting a real, active transmitter.
+
+The actual answer was a different message. `ES_Distance` (`0x161`) carries its own
+`Cruise_Button` field — and openpilot was *already* rebuilding and re-transmitting that
+entire message, every single frame, on every drive, for reasons that have nothing to do
+with buttons. Three things about it made emulation possible with zero new hardware, zero
+firmware changes, zero new bus access:
+
+1. **It's already being rewritten, every frame.** The button field just needed to carry a
+   chosen value instead of a relayed one — no new code path, no new message.
+2. **It's already TX-allowed.** No panda safety-firmware change required.
+3. **Nothing else is fighting for the wire.** The panda's own relay blocks the camera's
+   copy of this exact message from ever reaching the main bus — openpilot is the sole
+   legitimate source, zero contention. That's the opposite of `0x144`, where a live
+   competing transmitter is exactly why that route is blocked.
+
+Confirmed live, not just on paper: a software-chosen button value engaged real cruise
+control on the actual car within ~100ms, matching the car's exact speed at that instant.
+Full derivation and the live test: `progress.md` (search Q4/Q6/Q10), and
+`research/es_distance_cruise_button_finding.md`. Sunnypilot calls this exact idea —
+button-spoofed longitudinal control — **Intelligent Cruise Button Management**, confirmed
+unimplemented for every Subaru platform until now. Hence the name.
+
 ## Known issues — this is not a finished product
 
 - **EyeSight's own braking is slow.** Self-measured on this car: ~1.94 mph/s. One data
@@ -70,13 +106,6 @@ solved for any preglobal Subaru, in almost a decade of community attempts. This 
 investigating that too, but it is explicitly *not* the near-term focus; perfecting ICBM
 comes first. See `research/eyesight_throttle_channel.md` and Q14 in `progress.md` if you
 want the details.
-
-## Why "ICBM"
-
-Sunnypilot already ships this exact idea — button-spoofed longitudinal control — for other
-car brands, under the name **Intelligent Cruise Button Management**. It's confirmed
-unimplemented for every Subaru platform, preglobal included. This project is an attempt to
-close that gap, starting from a single car, done properly.
 
 ## How this got here
 
