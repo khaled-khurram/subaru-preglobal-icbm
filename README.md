@@ -82,7 +82,10 @@ the actual fork, know this first:
 - No first-boot disclaimer exists anywhere in this branch. You will not be told any of
   this by the software itself.
 
-Full trace: `progress.md`, 2026-08-14 entries.
+Full trace: `progress.md`, 2026-08-14 entries. Considering installing anyway?
+[`INSTALL.md`](INSTALL.md) has the real steps and the actual current limitations, stated
+plainly. The fix plan for the two gaps above (no UI changes — see why in the doc) is
+drafted, not shipped yet: `research/phase3_install_readiness_plan.md`.
 
 ## Known issues — this is not a finished product
 
