@@ -19,7 +19,13 @@ nothing here that could do that anyway, but don't assume otherwise.
 
 **This repo is public — scrub before pushing.** No personal name, no local absolute
 file paths (use `~/...` or generic placeholders), no network details (IPs, hostnames,
-Tailscale/LAN addresses, dongle IDs), no GPS coordinates from real drives. Two early
+Tailscale/LAN addresses, dongle IDs), no GPS coordinates from real drives. **This rule was
+violated and only caught 2026-08-14**, in a dedicated privacy-audit pass: a precise GPS fix
+(`progress.md`, the Q7/mapd-region-fix entries) had been sitting in the public repo despite
+this doc's own claim otherwise — redacted to `[REDACTED-GPS]`/`[REDACTED-GPS-TILE]` on
+discovery. Lesson: don't trust this doc's own scrubbing claims as verification — actually
+grep for coordinate-shaped numbers (`°N`/`°W`/lat/lon patterns) before treating a publish as
+clean, the same way every other real claim in this project gets checked, not assumed. Two early
 research reports (`Rigorous_Subaru_Preglobal_CAN_and_UDS_Research.md`,
 `Subaru_CAN_Reverse_Engineering.md`) were found to contain fabricated "verbatim
 quotes" and were deliberately excised — do not recreate them or cite them if
