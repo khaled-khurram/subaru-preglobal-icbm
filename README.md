@@ -57,6 +57,33 @@ Full derivation and the live test: `progress.md` (search Q4/Q6/Q10), and
 button-spoofed longitudinal control — **Intelligent Cruise Button Management**, confirmed
 unimplemented for every Subaru platform until now. Hence the name.
 
+## Not install-ready for a stranger yet — the honest gap list
+
+If you're just here to read the research, skip this. If you're thinking about installing
+the actual fork, know this first:
+
+- **The curve and lead advisories can't be turned off, for anyone, including you.** This
+  branch ships prebuilt (no on-device rebuild is possible), and two features' settings
+  keys were never compiled into the params allowlist — they silently fall back to
+  permanently *on*, with no UI toggle and no working SSH override. Fixing this needs a
+  real reinstall, not a config change.
+- **The map-data trap that cost this project weeks to diagnose has no safeguard added.**
+  If your device has no downloaded map data for your region, the curve advisory arms
+  correctly, shows nothing is wrong, and simply never fires — silently, indefinitely, with
+  zero on-screen indication. Check your region is actually downloaded before assuming it's
+  broken or working.
+- **Real actuation (the button-spoofing part) is SSH-only, on purpose for now** — three
+  flag files, no on-device toggle. Given the safety stakes, that's arguably correct to
+  leave as a deliberate gate rather than a gap, but it does mean a true stranger can't
+  reach it without dev-level access either way.
+- **The tuned constants (decel rate, button cadence, EyeSight's floor) came from one car.**
+  Actuation isn't restricted beyond "any preglobal Subaru" — it'll run on other model
+  years using numbers only validated on this one.
+- No first-boot disclaimer exists anywhere in this branch. You will not be told any of
+  this by the software itself.
+
+Full trace: `progress.md`, 2026-08-14 entries.
+
 ## Known issues — this is not a finished product
 
 - **EyeSight's own braking is slow.** Self-measured on this car: ~1.94 mph/s. One data
