@@ -15,9 +15,11 @@ failures included.
 - **Lead-vehicle closing-speed advisory** — same idea, driven by the vision model's own
   lead-detection data.
 - **Closed-loop ICBM actuation** for both — EyeSight's own setpoint commanded via button
-  emulation, gated behind explicit driver arming and an instant override latch on brake
-  press (gas/steering-torque overrides are disabled in the current live config — brake-only
-  is what's actually tuned and driven).
+  emulation, gated behind explicit driver arming and a two-tier safety design: brake press
+  is the only thing that latches the whole session off until the next cruise re-engagement
+  (gas/steering-torque no longer do — a deliberate, driven, tuned call), but gas, brake,
+  *and* steering-torque still independently block sending a simulated button press in the
+  exact instant any of them is active, every cycle, regardless of the session latch.
 
 ## Known issues — this is not a finished product
 
