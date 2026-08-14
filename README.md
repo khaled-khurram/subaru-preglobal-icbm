@@ -115,7 +115,9 @@ live in a moving car. That discipline is also what caught this project's own mis
 including two early AI-research passes that turned out to contain fabricated quotes
 (excised, documented, never repeated — see `claude.md`).
 
-See [`research/`](research) for every individual write-up, and
+**[`research/README.md`](research/README.md)** maps all ~80 files in that directory —
+a flowchart of how each finding led to the next, and which results are confirmed vs. still
+open vs. dead ends — so you don't have to open each one to find out. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for how to help — right now, the most useful thing is
 running the existing passive analysis scripts against a different preglobal car's own
 archived data.
